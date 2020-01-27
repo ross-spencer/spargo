@@ -1,0 +1,14 @@
+#!/usr/bin/spargo
+
+ENDPOINT=http://the-fr.org/public/sparql/endpoint.php
+
+# Formats with container magic in the-fr.org
+SELECT ?s ?label ?puid ?version ?pronomlink ?binaryMagic ?containerMagic WHERE {
+  ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+  ?s <http://the-fr.org/prop/format-registry/version> ?version .
+  ?s <http://the-fr.org/prop/format-registry/puid> ?puid .
+  ?s <https://www.w3.org/2002/07/owl#sameAs> ?pronomlink .
+  ?s <http://digipres.org/formats/sources/pronom/formats/#hasMagic> true .
+  ?s <http://the-fr.org/prop/format-registry/hasPRONOMContainerMagic> ?containerMagic .
+  ?s <http://the-fr.org/prop/format-registry/hasPRONOMBinaryMagic> ?binaryMagic .
+}

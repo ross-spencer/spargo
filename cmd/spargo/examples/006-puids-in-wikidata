@@ -1,0 +1,13 @@
+#!/usr/bin/spargo
+
+ENDPOINT=https://query.wikidata.org/sparql
+
+SELECT ?format ?puid ?ldd ?formatLabel ?extension ?mimetype ?sig WHERE
+{
+  ?format wdt:P2748 ?puid.
+  OPTIONAL { ?format wdt:P3266 ?ldd }
+  OPTIONAL { ?format wdt:P1195 ?extension }
+  OPTIONAL { ?format wdt:P1163 ?mimetype }
+  OPTIONAL { ?format p:P4152 ?sig }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+}

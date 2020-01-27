@@ -1,0 +1,9 @@
+#!/usr/bin/spargo
+
+ENDPOINT=http://the-fr.org/public/sparql/endpoint.php
+
+# Formats that are raster images in the-fr.org
+select distinct ?s ?label where {
+  ?s <http://the-fr.org/prop/format-registry/formatType> <http://the-fr.org/def/format-registry/RasterImage> .
+  ?s <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+} limit 20
