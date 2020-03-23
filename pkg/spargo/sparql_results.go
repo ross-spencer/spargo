@@ -37,23 +37,25 @@ Basic SPARQL results will be returned as follows:
 	      ]
 	   }
 	}
-
 */
 
-type item struct {
+// Item describes the verbose output of a SPARQL query needed to contextualize
+// it fully.
+type Item struct {
 	Lang     string `json:"xml:lang"` // Populated if requested in query.
 	Type     string // Can be "uri", "literal"
 	Value    string
 	DataType string
 }
 
-type binding struct {
-	Bindings []map[string]item
+// Binding is made up of multiple Items we can access those here.
+type Binding struct {
+	Bindings []map[string]Item
 }
 
 // SPARQLResult packages a SPARQL response from an endpoint.
 type SPARQLResult struct {
 	Head    map[string]interface{}
-	Results binding
+	Results Binding
 	Human   string
 }
