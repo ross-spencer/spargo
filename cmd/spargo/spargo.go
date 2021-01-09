@@ -155,7 +155,7 @@ func main() {
 	}
 	flag.Parse()
 	if vers {
-		fmt.Fprintf(os.Stderr, "%s \n", version())
+		fmt.Fprintf(os.Stderr, "%s (%s)\n", version(), spargo.DefaultAgent)
 		os.Exit(0)
 	} else if flag.NFlag() == 0 {
 		fmt.Fprintln(os.Stderr, "Usage:  spargo {options}              ")
@@ -164,7 +164,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "               OPTIONAL: [-version]   ")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Output: [JSON]   {url}")
-		fmt.Fprintf(os.Stderr, "Output: [STRING] '%s ...'\n\n", version())
+		fmt.Fprintf(os.Stderr, "Output: [STRING] '%s (%s) ...'\n\n", version(), spargo.DefaultAgent)
 		flag.Usage()
 		os.Exit(0)
 	} else {
