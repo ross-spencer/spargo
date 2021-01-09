@@ -21,14 +21,14 @@ var SHEBANG = []string{"#!spargo", "#!/usr/bin/spargo"}
 const ENDPOINT string = "ENDPOINT"
 
 var (
-	vers   bool
-	query  string
-	sparql string
+	vers     bool
+	query    string
+	endpoint string
 )
 
 func init() {
-	flag.StringVar(&sparql, "sparql", "", "first four bytes of file to find")
-	flag.StringVar(&sparql, "query", "", "return a single gif")
+	flag.StringVar(&endpoint, "endpoint", "", "endpoint to query")
+	flag.StringVar(&query, "query", "", "sparql query to run")
 	flag.BoolVar(&vers, "version", false, "Return version")
 }
 
@@ -168,6 +168,11 @@ func main() {
 		flag.Usage()
 		os.Exit(0)
 	} else {
-		// TODO: follow up with some defaults, and handling of CLI args.
+		fmt.Println("Welcome to spargo: arg handling is not yet implemented. Take a look at the README.md for examples on how to used spargo with piped input...")
+		fmt.Println("\nDebug, inputs:\n")
+		fmt.Printf("   * SPARQL: '%s' \n", endpoint)
+		fmt.Printf("   * Query: '%s' \n", query)
+		fmt.Println("")
+		fmt.Println("Take a look at the README.md for examples on how to used spargo with piped input...")
 	}
 }
