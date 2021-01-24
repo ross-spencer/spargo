@@ -1,5 +1,10 @@
 package spargo
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 /*
 Basic SPARQL results will be returned as follows:
 
@@ -43,19 +48,28 @@ Basic SPARQL results will be returned as follows:
 // it fully.
 type Item struct {
 	Lang     string `json:"xml:lang"` // Populated if requested in query.
-	Type     string // Can be "uri", "literal"
+	Type     string
 	Value    string
 	DataType string
 }
 
 // Binding is made up of multiple Items we can access those here.
 type Binding struct {
-	Bindings []map[string]Item
+	Bindings []map[string]Item `json:"bindings"`
 }
 
 // SPARQLResult packages a SPARQL response from an endpoint.
 type SPARQLResult struct {
-	Head    map[string]interface{}
-	Results Binding
-	Human   string
+	Head    map[string]interface{} `json:"head"`
+	Results Binding                `json:"results"`
+	Human   string                 `json:"-"`
+}
+
+// String will return a string representation of SPARQLResult.
+func (sparql SPARQLResult) String() string {
+	str, err := json.MarshalIndent(sparql, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%s", str)
 }

@@ -84,7 +84,7 @@ func runQuery(sparqlFile string) {
 	sparqlMe.ClientInit(url, queryString)
 	res := sparqlMe.SPARQLGo()
 
-	fmt.Println(res.Human)
+	fmt.Println(res)
 }
 
 func isPipeInput() bool {
