@@ -25,3 +25,4 @@ WHERE
   service wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE], <<lang>>". }
 }
 order by ?uri
+LIMIT 10
