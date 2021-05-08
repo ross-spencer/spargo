@@ -58,7 +58,7 @@ func (endpoint *SPARQLClient) SPARQLGo() SPARQLResult {
 
 	errorHandler(err)
 	if resp.StatusCode != 200 {
-		log.Printf("Error: unknown response from server: %s", resp.Status)
+		log.Printf("Spargo Error: unknown response from server: %d", resp.StatusCode)
 		return SPARQLResult{}
 	}
 
