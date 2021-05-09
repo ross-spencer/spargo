@@ -62,7 +62,6 @@ type Binding struct {
 type SPARQLResult struct {
 	Head    map[string]interface{} `json:"head"`
 	Results Binding                `json:"results"`
-	Human   string                 `json:"-"`
 }
 
 // String will return a string representation of SPARQLResult.

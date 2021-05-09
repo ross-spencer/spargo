@@ -76,10 +76,7 @@ func (endpoint *SPARQLClient) SPARQLGo() (SPARQLResult, error) {
 	}
 
 	var sparqlResponse SPARQLResult
-	sparqlResponse.Human = string(body)
-
 	err = json.Unmarshal(body, &sparqlResponse)
-
 	if err != nil {
 		return SPARQLResult{}, err
 	}
