@@ -45,8 +45,8 @@ And a JSON response will be returned to the caller.
 
 ## spargo Command
 
-The `spargo` command primarily supports piped input, and there are some example
-queries that can help demonstrate that.
+The `spargo` command supports piped input, and there are some example queries
+that can help demonstrate that.
 
 In the spargo cmd folder, one can do the following:
 
@@ -61,6 +61,10 @@ describe wd:Q931783
 
 ...{result}...
 ```
+
+> **NB.** output via CLI args may be supported in the future. The placeholders
+are there, but the capability is not. The user is given clear feedback on this
+when run via args.
 
 ## spargo Package
 
@@ -80,7 +84,7 @@ import (
 func ...() {
 	sparqlMe := spargo.SPARQLClient{}
 	sparqlMe.ClientInit(url, queryString)
-	res := sparqlMe.SPARQLGo().Human
+	res, _ := sparqlMe.SPARQLGo()
 }
 ```
 

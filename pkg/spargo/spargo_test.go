@@ -2,10 +2,12 @@ package spargo
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -48,49 +50,213 @@ func NewTestClient(fn RoundTripFunc) *http.Client {
 	}
 }
 
+// TestClientInit makes sure that we consistently get some sensible
+// values when the SPARQLClient init function is called.
+func TestClientInit(t *testing.T) {
+	sparql := SPARQLClient{}
+
+	sparql.ClientInit("", "")
+
+	if sparql.BaseURL != "" {
+		t.Errorf("ClientInit: BaseURL should be nil unless otherwise set, not %s", sparql.BaseURL)
+	}
+
+	if sparql.Query != "" {
+		t.Errorf("ClientInit: Query should be nil unless otherwise set, not %s", sparql.Query)
+	}
+
+	if sparql.Agent != DefaultAgent {
+		t.Errorf("ClientInit: Agent should be %s on first init", sparql.Agent)
+	}
+
+	if sparql.Accept != DefaultAccept {
+		t.Errorf("ClientInit: Accept should be %s on first init", sparql.Accept)
+	}
+
+}
+
+// TestSetupClient checks to make sure a http.Client interface is
+// correctly provided to the endpoint type when setup is called.
+func TestSetupClient(t *testing.T) {
+	sparql := SPARQLClient{}
+	if sparql.Client != nil {
+		t.Error("SPARQLClient client should be nil before initialization")
+	}
+	setupClient(&sparql)
+	emptyClientInterface := http.Client{}
+	if reflect.TypeOf(sparql.Client) != reflect.TypeOf(&emptyClientInterface) {
+		t.Error("SPARQLClient not setup with http.Client when setupClient() called")
+	}
+}
+
+// spargoTests describes a row of data for testing with. The
+// placeholders represent input and output values for our unit tests.
+type spargoTests struct {
+	statusCode        int
+	okButFail         bool
+	emptySPARQLresult bool
+	responseValue     string
+	resultsLen        int
+	expectedRes       []string
+}
+
+const errorMessage = "Spargo: unexpected response from server: %d"
+
+// spargoResults describes a table of inputs for our unit tests and
+// their anticipated results values.
+var spargoResults = []spargoTests{
+	spargoTests{200, false, false, testString, 2, []string{"http://the-fr.org/id/file-format/25", "OS/2 Bitmap", "http://the-fr.org/id/file-format/28", "CALS Compressed Bitmap"}},
+	spargoTests{200, false, true, testEmptyResult, 0, []string{}},
+	spargoTests{300, false, false, "Unexpected test string", 0, nil},
+	spargoTests{400, false, false, "Unexpected test string", 0, nil},
+	spargoTests{418, false, false, "Unexpected test string", 0, nil},
+	spargoTests{200, true, true, "{\"Parsing should fail gracefully", 0, []string{}},
+	spargoTests{200, true, true, "Parsing should fail gracefully", 0, []string{}},
+	spargoTests{200, true, true, "{\"No\": \"Real value\"}", 0, []string{}},
+}
+
 // TestSparqlHandler tests the request/receive capabilities of the
 // package and simply makes sure that between posting a request
 // and then receiving it and formatting it that the outcome is what
 // was expected by the caller, i.e. the data is returned and parsed
 // correctly by the library so that it can be used.
 func TestSparqlHandler(t *testing.T) {
-	httpClient := NewTestClient(func(req *http.Request) *http.Response {
-		return &http.Response{
-			StatusCode: 200,
-			// Send response to be tested
-			Body: ioutil.NopCloser(bytes.NewBufferString(testString)),
-			// Must be set to non-nil value or it panics
-			Header: make(http.Header),
+	for _, val := range spargoResults {
+
+		httpClient := NewTestClient(func(req *http.Request) *http.Response {
+			return &http.Response{
+				StatusCode: val.statusCode,
+				// Send response to be tested
+				Body: ioutil.NopCloser(bytes.NewBufferString(val.responseValue)),
+				// Must be set to non-nil value or it panics
+				Header: make(http.Header),
+			}
+		})
+
+		sparql := SPARQLClient{}
+		sparql.Client = httpClient
+		sparql.ClientInit("http://example.com", testQuery)
+		response, err := sparql.SPARQLGo()
+
+		results := response.Results.Bindings
+
+		if val.emptySPARQLresult {
+			if response.String() != (SPARQLResult{}.String()) {
+				t.Errorf("Expected an empty SPARQL result, received; %s", response.String())
+			}
 		}
-	})
 
-	sparql := SPARQLClient{}
-	sparql.Client = httpClient
-	sparql.ClientInit("http://example.com", testQuery)
-	response := sparql.SPARQLGo()
+		if val.statusCode == 200 {
 
-	results := response.Results.Bindings
-	if len(results) != 2 {
-		t.Errorf("Anticipated length of 2, received %d", len(results))
-	}
+			if err != nil && !val.okButFail {
+				t.Errorf("Expected 'nil' error from SPARQLGo, received: %s", err)
+			}
 
-	expectedRes := []string{
-		"http://the-fr.org/id/file-format/25",
-		"OS/2 Bitmap",
-		"http://the-fr.org/id/file-format/28",
-		"CALS Compressed Bitmap",
-	}
+			if val.okButFail {
+				if !reflect.DeepEqual(response, SPARQLResult{}) {
+					t.Errorf("Didn't receive an empty interface from SPARQLGo, received: %s", reflect.TypeOf(response))
+				}
+			}
 
-	var receivedRes []string
-	for _, res := range results {
-		for _, item := range res {
-			receivedRes = append(receivedRes, item.Value)
+			if len(results) != val.resultsLen {
+				t.Errorf("Anticipated length of %d, received %d", val.resultsLen, len(results))
+			}
+
+			var receivedRes []string
+			for _, res := range results {
+				for _, item := range res {
+					receivedRes = append(receivedRes, item.Value)
+				}
+			}
+
+			if len(val.expectedRes) == 0 {
+				// DeepEqual does not evaluate nil slices to be equal.
+				if len(receivedRes) != 0 {
+					t.Errorf("Expected results length 0 but got '%d': %s", len(receivedRes), receivedRes)
+				}
+				// Cannot use the tests to compare any further.
+				return
+			}
+
+			sort.Strings(receivedRes)
+			sort.Strings(val.expectedRes)
+			if reflect.DeepEqual(receivedRes, val.expectedRes) != true {
+				t.Errorf("Result arrays are not equal, received %s, expected %s", receivedRes, val.expectedRes)
+			}
+		}
+
+		if val.statusCode != 200 {
+			if err == nil {
+				t.Errorf("Expected error from SPARQLGo, received: %s", err)
+			}
+
+			constructedError := fmt.Errorf(errorMessage, val.statusCode)
+
+			if err.Error() != constructedError.Error() {
+				t.Errorf("Expected specific error: '%s' from SPARQLGo, received: %s", constructedError, err)
+			}
+
+			if len(results) != 0 {
+				t.Errorf("Results should not have been parsed by SPARGO")
+			}
 		}
 	}
+}
 
-	sort.Strings(receivedRes)
-	sort.Strings(expectedRes)
-	if reflect.DeepEqual(receivedRes, expectedRes) != true {
-		t.Error("Result arrays are not equal")
+// RoundTripFuncError describes an interface type that we will then
+// implement.
+type RoundTripFuncError func(req *http.Request) *http.Response
+
+// Mock error string.
+const mockError = "Mock error..."
+
+// RoundTripError implements Golang's roundtrip interface. In this
+// version we want to simulate an error when trying to connect to a
+// given SPARQL server.
+func (fn RoundTripFuncError) RoundTrip(request *http.Request) (*http.Response, error) {
+	return fn(request), fmt.Errorf(mockError)
+}
+
+// NewTestClientError returns *http.Client with Transport replaced to
+// avoid making real calls out to the Internet. Transport will then do
+// whatever we request of it. With this version we mock an error in the
+// call.
+func NewTestClientError(fn RoundTripFuncError) *http.Client {
+	return &http.Client{
+		Transport: RoundTripFuncError(fn),
+	}
+}
+
+// TestSparqlHandlerError tests the package when an error is returned
+// by the http.Client.
+func TestSparqlHandlerError(t *testing.T) {
+	for _, val := range spargoResults {
+
+		httpClient := NewTestClientError(func(req *http.Request) *http.Response {
+			return &http.Response{
+				StatusCode: val.statusCode,
+				// Send response to be tested.
+				Body: ioutil.NopCloser(bytes.NewBufferString(val.responseValue)),
+				// Must be set to non-nil value or it panics.
+				Header: make(http.Header),
+			}
+		})
+
+		sparql := SPARQLClient{}
+		sparql.Client = httpClient
+		sparql.ClientInit("http://example.com", testQuery)
+		response, err := sparql.SPARQLGo()
+
+		if response.String() != (SPARQLResult{}.String()) {
+			t.Errorf("Expected an empty SPARQL result, received; %s", response.String())
+		}
+
+		if err == nil {
+			t.Errorf("Expected error from SPARQLGo, received: %s", err)
+		}
+
+		if !strings.Contains(err.Error(), mockError) {
+			t.Errorf("Expected a mock error response from the call but it wasn't there: %s", err.Error())
+		}
 	}
 }

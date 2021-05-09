@@ -82,7 +82,11 @@ func runQuery(sparqlFile string) {
 
 	sparqlMe := spargo.SPARQLClient{}
 	sparqlMe.ClientInit(url, queryString)
-	res := sparqlMe.SPARQLGo()
+	res, err := sparqlMe.SPARQLGo()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Query failed with: %+s\n\n", err)
+	}
 
 	fmt.Println(res)
 }
@@ -169,7 +173,7 @@ func main() {
 		os.Exit(0)
 	} else {
 		fmt.Println("Welcome to spargo: arg handling is not yet implemented. Take a look at the README.md for examples on how to used spargo with piped input...")
-		fmt.Println("\nDebug, inputs:\n")
+		fmt.Printf("\nDebug, inputs:\n\n")
 		fmt.Printf("   * SPARQL: '%s' \n", endpoint)
 		fmt.Printf("   * Query: '%s' \n", query)
 		fmt.Println("")

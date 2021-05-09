@@ -39,3 +39,14 @@ var testString = `{
       ]
    }
 }`
+
+// testEmptyResult is covered implicitly in the code when we compare the
+// result of error conditions. We just want to make sure that for a
+// properly empty result, e.g. no SPARQL results, we get something back
+// that is properly well-formed.
+var testEmptyResult = `{
+  "head": null,
+  "results": {
+    "bindings": null
+  }
+}`
