@@ -1,11 +1,11 @@
-package spargo
-
 /* Golang SPARQL package
 
 Enable the querying of a SPARQL data store using Golang.
 
 	"...Too rich for some people's tastes..."
 */
+
+package spargo
 
 import (
 	"encoding/json"
