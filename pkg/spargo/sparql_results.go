@@ -47,10 +47,10 @@ Basic SPARQL results will be returned as follows:
 // Item describes the verbose output of a SPARQL query needed to contextualize
 // it fully.
 type Item struct {
-	Lang     string `json:"xml:lang"` // Populated if requested in query.
-	Type     string
-	Value    string
-	DataType string
+	Lang     string `json:"xml:lang,omitempty"` // Populated if requested in query.
+	Type     string `json:"type"`
+	Value    string `json:"value"`
+	DataType string `json:"datatype,omitempty"`
 }
 
 // Binding is made up of multiple Items we can access those here.

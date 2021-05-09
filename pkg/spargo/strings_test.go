@@ -1,36 +1,38 @@
 package spargo
 
-var testQuery = `select distinct ?s ?label where {
-	?s <http://the-fr.org/prop/format-registry/formatType> <http://the-fr.org/def/format-registry/RasterImage> .
-	?s <http://www.w3.org/2000/01/rdf-schema#label> ?label .
+var testQuery = `select distinct ?format ?label where {
+	?format <http://the-fr.org/prop/format-registry/formatType> <http://the-fr.org/def/format-registry/RasterImage> .
+	?format <http://www.w3.org/2000/01/rdf-schema#label> ?label .
 } limit 10`
 
 var testString = `{
    "head":{
       "vars":[
-         "s",
+         "format",
          "label"
       ]
    },
    "results":{
       "bindings":[
          {
-            "s":{
+            "format":{
                "type":"uri",
                "value":"http://the-fr.org/id/file-format/25"
             },
             "label":{
+               "datatype" : "http://example.com/DataTypes#unicode",
                "type":"literal",
                "value":"OS/2 Bitmap",
                "xml:lang":"en"
             }
          },
          {
-            "s":{
+            "format":{
                "type":"uri",
                "value":"http://the-fr.org/id/file-format/28"
             },
             "label":{
+               "datatype" : "http://example.com/DataTypes#unicode",
                "type":"literal",
                "value":"CALS Compressed Bitmap",
                "xml:lang":"en"

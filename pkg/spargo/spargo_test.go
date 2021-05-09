@@ -2,6 +2,7 @@ package spargo
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -258,5 +259,153 @@ func TestSparqlHandlerError(t *testing.T) {
 		if !strings.Contains(err.Error(), mockError) {
 			t.Errorf("Expected a mock error response from the call but it wasn't there: %s", err.Error())
 		}
+	}
+}
+
+// spargoTestsProof describes a row of data for testing with. The
+// placeholders represent input and output values for our unit tests.
+type spargoTestsProof struct {
+	statusCode       int
+	responseValue    string
+	dataTypeSliceLen int
+	langSliceLen     int
+}
+
+// spargoResultsProof describes a table of inputs for our unit tests and
+// their anticipated results values.
+var spargoResultsProof = []spargoTestsProof{
+	spargoTestsProof{200, testString, 2, 2},
+	spargoTestsProof{200, testEmptyResult, 0, 0},
+}
+
+// compare is a helper function for comparing two slices and failing the
+// tests if they are not the same.
+func compare(t *testing.T, arr1 []string, arr2 []string) {
+	sort.Strings(arr1)
+	sort.Strings(arr2)
+	if !reflect.DeepEqual(arr1, arr2) {
+		t.Errorf("Arrays do not match: '%s', and '%s'", arr1, arr2)
+	}
+}
+
+// TestHumanEquivalence is a temporary function used to prove the
+// equivalence between one of the interfaces that we are removing. For
+// this test to work accurately we RoundTrip the result retrieved from
+// "human" and compare the results with the response as it was originally
+// received from the mock SPARQL endpoint.
+func TestHumanEquivalence(t *testing.T) {
+	for _, val := range spargoResultsProof {
+
+		httpClient := NewTestClient(func(req *http.Request) *http.Response {
+			return &http.Response{
+				StatusCode: val.statusCode,
+				// Send response to be tested
+				Body: ioutil.NopCloser(bytes.NewBufferString(val.responseValue)),
+				// Must be set to non-nil value or it panics
+				Header: make(http.Header),
+			}
+		})
+
+		sparql := SPARQLClient{}
+		sparql.Client = httpClient
+		sparql.ClientInit("http://example.com", testQuery)
+		machineResponse, _ := sparql.SPARQLGo()
+
+		if val.statusCode == 200 {
+
+			var humanSparqlResponse SPARQLResult
+			err := json.Unmarshal([]byte(machineResponse.Human), &humanSparqlResponse)
+			if err != nil {
+				t.Errorf("Expected 'nil' errors received; %s", err)
+			}
+
+			// Compare Values.
+			var humanResValues []string
+			for _, res := range humanSparqlResponse.Results.Bindings {
+				for _, item := range res {
+					humanResValues = append(humanResValues, item.Value)
+				}
+			}
+			var machineResValues []string
+			for _, res := range machineResponse.Results.Bindings {
+				for _, item := range res {
+					machineResValues = append(machineResValues, item.Value)
+				}
+			}
+			compare(t, machineResValues, humanResValues)
+
+			// Compare Language field, e.g. EN, DE.
+			var humanResLang []string
+			for _, res := range humanSparqlResponse.Results.Bindings {
+				for _, item := range res {
+					if item.Lang != "" {
+						humanResLang = append(humanResLang, item.Lang)
+					}
+				}
+			}
+			var machineResLang []string
+			for _, res := range machineResponse.Results.Bindings {
+				for _, item := range res {
+					if item.Lang != "" {
+						machineResLang = append(machineResLang, item.Lang)
+					}
+				}
+			}
+			compare(t, machineResLang, humanResLang)
+			if len(machineResLang) != val.langSliceLen ||
+				len(humanResLang) != val.langSliceLen {
+				t.Errorf("Lang slices are expected to be '%d' for this test, not '%d' and '%d'",
+					val.langSliceLen,
+					len(machineResLang),
+					len(humanResLang),
+				)
+			}
+
+			// Compare DataType, e.g. Decimal, DateTime.
+			var humanResDataType []string
+			for _, res := range humanSparqlResponse.Results.Bindings {
+				for _, item := range res {
+					if item.DataType != "" {
+						humanResDataType = append(humanResDataType, item.DataType)
+					}
+				}
+			}
+			var machineResDataType []string
+			for _, res := range machineResponse.Results.Bindings {
+				for _, item := range res {
+					if item.DataType != "" {
+						machineResDataType = append(machineResDataType, item.DataType)
+					}
+				}
+			}
+			compare(t, machineResDataType, humanResDataType)
+			if len(machineResDataType) != val.dataTypeSliceLen ||
+				len(humanResDataType) != val.dataTypeSliceLen {
+				t.Errorf("DataType slices are expected to be '%d' for this test, not '%d' and '%d'",
+					val.dataTypeSliceLen,
+					len(machineResDataType),
+					len(humanResDataType),
+				)
+			}
+
+			// Compare type, e.g. Literal, URI.
+			var humanResType []string
+			for _, res := range humanSparqlResponse.Results.Bindings {
+				for _, item := range res {
+					humanResType = append(humanResType, item.Type)
+				}
+			}
+			var machineResType []string
+			for _, res := range machineResponse.Results.Bindings {
+				for _, item := range res {
+					machineResType = append(machineResType, item.Type)
+				}
+			}
+			compare(t, machineResType, humanResType)
+
+		} else {
+			t.Errorf("Response code different than 200: '%d'", val.statusCode)
+		}
+
 	}
 }
