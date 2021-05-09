@@ -3,9 +3,10 @@
 ENDPOINT=https://query.wikidata.org/sparql
 
 # Wikidata and FDD link to fmt/134
-SELECT ?format ?puid ?ldd WHERE
+SELECT ?format ?formatLabel ?puid ?ldd WHERE
 {
   ?format wdt:P2748 "fmt/134".
   ?format wdt:P2748 ?puid .
   ?format wdt:P3266 ?ldd .
+  service wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE], fr". }
 }
