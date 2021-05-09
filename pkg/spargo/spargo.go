@@ -15,7 +15,7 @@ import (
 )
 
 // DefaultAgent user-agent determined by Wikidata User-agent policy: https://meta.wikimedia.org/wiki/User-Agent_policy.
-const DefaultAgent string = "spargo/0.0.2 (https://github.com/ross-spencer/spargo/; all.along.the.watchtower+github@gmail.com)"
+const DefaultAgent string = "spargo/0.0.3 (https://github.com/ross-spencer/spargo/; all.along.the.watchtower+github@gmail.com)"
 
 // TODO: Fix lazy error handling...
 func errorHandler(err error) {
