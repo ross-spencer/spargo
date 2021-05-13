@@ -15,7 +15,7 @@ import (
 )
 
 // DefaultAgent user-agent determined by Wikidata User-agent policy: https://meta.wikimedia.org/wiki/User-Agent_policy.
-const DefaultAgent string = "spargo/0.0.3 (https://github.com/ross-spencer/spargo/; all.along.the.watchtower+github@gmail.com)"
+const DefaultAgent string = "spargo/0.3.0 (https://github.com/ross-spencer/spargo/; all.along.the.watchtower+github@gmail.com)"
 
 // DefaultAccept is the default accept-content string to be used in the HTTP request header.
 const DefaultAccept string = "application/sparql-results+json, application/json"
