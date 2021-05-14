@@ -2,6 +2,7 @@ package spargo
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -100,8 +101,6 @@ type spargoTests struct {
 	expectedRes       []string
 }
 
-const errorMessage = "Spargo: unexpected response from server: %d"
-
 // spargoResults describes a table of inputs for our unit tests and
 // their anticipated results values.
 var spargoResults = []spargoTests{
@@ -175,7 +174,7 @@ func TestSparqlHandler(t *testing.T) {
 					t.Errorf("Expected results length 0 but got '%d': %s", len(receivedRes), receivedRes)
 				}
 				// Cannot use the tests to compare any further.
-				return
+				continue
 			}
 
 			sort.Strings(receivedRes)
@@ -186,14 +185,22 @@ func TestSparqlHandler(t *testing.T) {
 		}
 
 		if val.statusCode != 200 {
+
 			if err == nil {
 				t.Errorf("Expected error from SPARQLGo, received: %s", err)
 			}
 
-			constructedError := fmt.Errorf(errorMessage, val.statusCode)
+			responseTest := ResponseError{}
 
-			if err.Error() != constructedError.Error() {
-				t.Errorf("Expected specific error: '%s' from SPARQLGo, received: %s", constructedError, err)
+			if !errors.As(err, &responseTest) {
+				t.Errorf("Error returned is not a spargo.ResponseError{}, but: '%s'", err)
+			}
+
+			if !strings.Contains(err.Error(), fmt.Sprint(val.statusCode)) {
+				t.Errorf("Expected status code '%d' from error, received: '%s'",
+					val.statusCode,
+					err.Error(),
+				)
 			}
 
 			if len(results) != 0 {

@@ -1,6 +1,6 @@
 /* Golang SPARQL package
 
-Enable the querying of a SPARQL data store using Golang.
+Package spargo enables the querying of a SPARQL data store using Golang.
 
 	"...Too rich for some people's tastes..."
 */
@@ -9,7 +9,6 @@ package spargo
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -66,7 +65,9 @@ func (endpoint *SPARQLClient) SPARQLGo() (SPARQLResult, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return SPARQLResult{}, fmt.Errorf("spargo: unexpected response from server: %d", resp.StatusCode)
+		responseErr := ResponseError{}
+		return SPARQLResult{}, responseErr.makeError(200, resp.StatusCode)
+
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
