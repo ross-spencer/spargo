@@ -2,7 +2,7 @@
 
 SPARQL helper library for Golang
 
-[![Build Status](https://travis-ci.org/ross-spencer/spargo.svg?branch=master)](https://travis-ci.org/ross-spencer/spargo)
+[![Go test](https://github.com/ross-spencer/spargo/actions/workflows/github-actions.yml/badge.svg)](https://github.com/ross-spencer/spargo/actions/workflows/github-actions.yml)
 [![GoDoc](https://godoc.org/github.com/ross-spencer/spargo?status.svg)](https://godoc.org/github.com/ross-spencer/spargo/pkg/spargo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ross-spencer/spargo/pkg/spargo)](https://goreportcard.com/report/github.com/ross-spencer/spargo/pkg/spargo)
 

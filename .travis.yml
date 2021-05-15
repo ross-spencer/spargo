@@ -1,8 +1,0 @@
-language: go
-go_import_path: github.com/ross-spencer/spargo
-go:
-  - 1.13.1
-  - tip
-
-script:
-  - go test -v github.com/ross-spencer/spargo/pkg/spargo
