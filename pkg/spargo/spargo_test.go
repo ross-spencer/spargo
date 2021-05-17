@@ -221,6 +221,9 @@ const mockError = "Mock error..."
 // version we want to simulate an error when trying to connect to a
 // given SPARQL server.
 func (fn RoundTripFuncError) RoundTrip(request *http.Request) (*http.Response, error) {
+	if fn(request).StatusCode != 200 || fn(request).StatusCode != 300 {
+		return nil, fmt.Errorf(mockError)
+	}
 	return fn(request), fmt.Errorf(mockError)
 }
 
